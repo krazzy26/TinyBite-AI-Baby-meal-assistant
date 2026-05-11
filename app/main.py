@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from app.schemas import BabyProfile, Meal, MealPlan
+from app.openai_service import generate_meal_plan_with_openai
+import traceback
 
 app = FastAPI(title="TinyBite AI",
               description="AI -powered baby meal planning assistant",
@@ -8,9 +10,18 @@ app = FastAPI(title="TinyBite AI",
 @app.get("/health")
 def health_check():
     return {
-        "status":"not ok",
+        "status":"ok",
         "service":"TinyBite AI"
     }
+
+@app.post("/meal-plan", response_model=MealPlan)
+def create_meal_plan(profile:BabyProfile):
+    try:
+        return generate_meal_plan_with_openai(profile)
+    except Exception as e:
+        print("Error while generating meal plan")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to generate meal plan: str(e)")
 
 @app.post("/meal-plan1", response_model=MealPlan)
 def create_meal_plan1(profile:BabyProfile):
