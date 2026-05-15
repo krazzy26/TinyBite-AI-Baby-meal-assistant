@@ -47,7 +47,7 @@ Your job:
 
     response = client.responses.create(
         model="gpt-4o-mini",
-        input=[{"role":"system", "content":system_prompt}, 
+        input=[{"role":"system", "content":system_prompt},
             {"role":"user", "content":user_prompt},],
         text={
             "format": {

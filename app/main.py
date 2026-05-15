@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from app.schemas import BabyProfile, Meal, MealPlan
 from app.openai_service import generate_meal_plan_with_openai
+from app.formatter import format_meal_plan_for_whatsapp
 import traceback
 
 app = FastAPI(title="TinyBite AI",
@@ -22,22 +23,19 @@ def create_meal_plan(profile:BabyProfile):
         print("Error while generating meal plan")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to generate meal plan: str(e)")
+    
 
-@app.post("/meal-plan1", response_model=MealPlan)
-def create_meal_plan1(profile:BabyProfile):
-    return MealPlan (
-        date="2026-05-11", 
-        meals=[
-          Meal(
-                type="breakfast",
-                name="Vegetable suji upma",
-                ingredients=["suji", "carrot", "peas", "ghee"],
-                prep="Cook until very soft and mash lightly.",
-                portion_guidance="Start with a small toddler bowl and follow appetite.",
-                safety_notes=["Ensure vegetables are very soft and finely chopped."]
-            ),
-        ],
-        shopping_list=["suji", "moong dal", "curd", "paneer", "carrot"],
-        parent_note="Simple meal plan. Consult pediatrician for any allergy concerns"
-         
-    )
+@app.post("/meal-plan/message")
+def create_meal_plan_message(profile:BabyProfile):
+    try:
+        plan = generate_meal_plan_with_openai(profile)
+        message = format_meal_plan_for_whatsapp(plan)
+
+        return {
+            "message":message,
+            "plan":plan
+        }
+    except Exception as e:
+        print("Error while generating meal plan message")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
